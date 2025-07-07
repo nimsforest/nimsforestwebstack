@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }} | {{ .Site.Title }}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2563eb; }
+        h2 { color: #4f46e5; }
+        .status { 
+            display: inline-block; 
+            background: #10b981; 
+            color: white; 
+            padding: 0.25rem 0.5rem; 
+            border-radius: 4px; 
+            font-size: 0.875rem;
+        }
+        ul { list-style-type: none; padding: 0; }
+        li { 
+            padding: 0.5rem; 
+            margin: 0.5rem 0; 
+            background: #f3f4f6; 
+            border-radius: 4px; 
+        }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="status">✅ RUNNING</span>
+        
+        {{ .Content }}
+        
+        <div class="footer">
+            <p>🌲 Powered by nimsforestwebstack | Built with Hugo</p>
+        </div>
+    </div>
+</body>
+</html>

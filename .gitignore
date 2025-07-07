@@ -1,0 +1,63 @@
+# nimsforestwebstack .gitignore
+
+# Build outputs
+/build/
+/dist/
+/out/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Go build outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+nimsforestwebstack
+
+# Test artifacts
+coverage.out
+*.test
+
+# Environment files
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+tmp/
+temp/
+
+# Hugo build outputs (for development)
+/webstack/hugo-site/public/
+/webstack/hugo-site/resources/_gen/
+
+# Next.js build outputs (for development)
+/webstack/nextjs-*/out/
+/webstack/nextjs-*/.next/
+/webstack/nextjs-*/build/
+
+# Docker
+.docker/
+
+# Generated examples (keep templates, ignore generated projects)
+/examples/generated/
