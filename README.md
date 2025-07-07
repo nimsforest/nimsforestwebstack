@@ -8,25 +8,31 @@ Universal Web Stack Framework - Complete web stack generator using pure Makefile
 
 1. **Add to your project:**
    ```bash
-   # Option A: Clone as git submodule (recommended)
+   # Option A: Add as git submodule (recommended)
    git submodule add git@github.com:nimsforest/nimsforestwebstack.git tools/nimsforestwebstack
    
    # Option B: Clone directly
    git clone git@github.com:nimsforest/nimsforestwebstack.git tools/nimsforestwebstack
    ```
 
-2. **Integrate with your project:**
-   Add this line to your main `Makefile`:
-   ```makefile
-   -include tools/nimsforestwebstack/Makefile
+2. **Set up environment and integrate:**
+   ```bash
+   # Set your project root directory (REQUIRED)
+   export PROJECTDIR=/path/to/your/project
+   
+   # Navigate to the framework
+   cd tools/nimsforestwebstack
+   
+   # Add integration to your main Makefile
+   make nimsforestwebstack-addtomainmake
+   
+   # Create .env file with defaults at project root
+   make nimsforestwebstack-setupenv
    ```
 
 3. **Initialize your web stack:**
    ```bash
-   # Create .env file with defaults
-   make nimsforestwebstack-setupenv
-   
-   # Analyze your project
+   # Analyze your project (validates PROJECTDIR and .env)
    make nimsforestwebstack-hello
    
    # Initialize the web stack structure
@@ -82,7 +88,12 @@ your-project/
 ## 🔧 Available Commands
 
 ### Core Commands
+**Note: All commands require `PROJECTDIR` environment variable to be set and must be run from `tools/nimsforestwebstack/`**
+
 ```bash
+export PROJECTDIR=/path/to/your/project
+cd tools/nimsforestwebstack
+
 make nimsforestwebstack-hello        # Analyze project and show status
 make nimsforestwebstack-setupenv     # Create .env file with defaults
 make nimsforestwebstack-init         # Initialize webstack structure
@@ -106,6 +117,7 @@ cd webstack && make test-all         # Run all tests
 # Project configuration
 PROJECT_NAME=my-web-project
 DOMAIN=localhost
+PROJECTDIR=/path/to/your/project
 
 # Directory paths
 WEBSTACK_DIR=webstack
@@ -124,6 +136,7 @@ POSTGRES_PASSWORD=webstack_dev_password
 ```
 
 ### Customization
+- **Project directory**: Set `PROJECTDIR` environment variable to your project root
 - **Project name**: Edit `PROJECT_NAME` in `.env`
 - **Domain**: Edit `DOMAIN` in `.env` for production
 - **Ports**: Modify port variables to avoid conflicts
@@ -210,8 +223,9 @@ docker-compose -f docker-compose.dev.yml up --build
 - **Hugo** - Static site generator
 
 ### Project Requirements
+- **PROJECTDIR environment variable** - Must point to your project root
 - **Root Makefile** - Must include nimsforestwebstack
-- **Root .env file** - Environment configuration
+- **Root .env file** - Environment configuration (created automatically)
 - **Git repository** - Version control (recommended)
 
 ## 🎯 Use Cases
@@ -241,6 +255,32 @@ docker-compose -f docker-compose.dev.yml up --build
 ## 📄 License
 
 MIT License - see LICENSE file for details.
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"PROJECTDIR environment variable not set"**
+```bash
+# Solution: Set PROJECTDIR to your project root
+export PROJECTDIR=/path/to/your/project
+cd tools/nimsforestwebstack
+make nimsforestwebstack-hello
+```
+
+**"PROJECTDIR directory does not exist"**
+```bash
+# Solution: Ensure the path exists and is correct
+ls -la $PROJECTDIR  # Check if directory exists
+export PROJECTDIR=/correct/path/to/your/project
+```
+
+**Commands not working from project root**
+```bash
+# All commands must be run from tools/nimsforestwebstack/
+cd tools/nimsforestwebstack
+make nimsforestwebstack-hello
+```
 
 ## 🔗 Links
 
