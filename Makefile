@@ -263,38 +263,16 @@ nimsforestwebstack-init:
 		exit 1; \
 	fi
 	@echo "📁 This will create new directories inside $(WEBSTACK_DIR)/ folder."
-	@echo "🔍 Checking for existing structure..."
-	@if [ -d "ui/website" ]; then \
-		echo "  ✅ Found existing ui/website - will create nextjs-app separately"; \
-	fi
-	@if [ -d "nest" ]; then \
-		echo "  ✅ Found existing nest/ - will create api/ for web stack API"; \
-	fi
-	@echo ""
-	@read -p "Continue with initialization? (y/n): " confirm; \
-	if [ "$$confirm" != "y" ] && [ "$$confirm" != "Y" ]; then \
-		echo "❌ Initialization cancelled"; \
-		exit 1; \
-	fi
 	@echo ""
 	@echo "📁 Creating $(WEBSTACK_DIR)/ directory structure..."
 	@mkdir -p $(HUGO_DIR)/content/docs $(HUGO_DIR)/data $(HUGO_DIR)/layouts/_default $(HUGO_DIR)/static $(HUGO_DIR)/resources
 	@mkdir -p $(NEXTJS_STATIC_DIR)/pages $(NEXTJS_STATIC_DIR)/public $(NEXTJS_STATIC_DIR)/src/components $(NEXTJS_STATIC_DIR)/src/pages
 	@echo "  📁 Created $(NEXTJS_SSR_DIR)/"
-	@if [ -d "ui/website" ]; then \
-		echo "  💡 Note: Existing ui/website found - migrate content as needed:"; \
-		echo "     Marketing content → $(HUGO_DIR)/"; \
-		echo "     Interactive tools → $(NEXTJS_STATIC_DIR)/"; \
-		echo "     Dynamic app pages → $(NEXTJS_SSR_DIR)/"; \
-	fi
 	@mkdir -p $(NEXTJS_SSR_DIR)/pages $(NEXTJS_SSR_DIR)/public $(NEXTJS_SSR_DIR)/src/app $(NEXTJS_SSR_DIR)/src/components
 	@mkdir -p $(API_DIR)/handlers
 	@mkdir -p $(API_DIR)/middleware
 	@mkdir -p $(API_DIR)/models
 	@echo "  📁 Created $(API_DIR)/"
-	@if [ -d "nest" ]; then \
-		echo "  💡 Note: Existing nest/ found - $(API_DIR)/ is separate for the web stack"; \
-	fi
 	@mkdir -p $(AUTH_DIR)
 	@mkdir -p $(INFRA_DIR)/nginx
 	@mkdir -p $(INFRA_DIR)/docker
