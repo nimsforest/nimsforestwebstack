@@ -9,10 +9,10 @@ Universal Web Stack Framework - Complete web stack generator using pure Makefile
 1. **Add to your project:**
    ```bash
    # Option A: Clone as git submodule (recommended)
-   git submodule add <repo-url> tools/nimsforestwebstack
+   git submodule add git@github.com:nimsforest/nimsforestwebstack.git tools/nimsforestwebstack
    
    # Option B: Clone directly
-   git clone <repo-url> tools/nimsforestwebstack
+   git clone git@github.com:nimsforest/nimsforestwebstack.git tools/nimsforestwebstack
    ```
 
 2. **Integrate with your project:**
