@@ -28,9 +28,9 @@ INFRA_DIR := $(WEBSTACK_DIR)/infrastructure
 # ============================================================================
 # Help (for standalone usage)
 # ============================================================================
-.PHONY: help
+.PHONY: nimsforestwebstack-help
 
-help:
+nimsforestwebstack-help:
 	@echo "🌲 nimsforestwebstack - Universal Web Stack Framework"
 	@echo "===================================================="
 	@echo ""
@@ -63,7 +63,7 @@ help:
 # ============================================================================
 # Main Commands (prefixed for integration)
 # ============================================================================
-.PHONY: nimsforestwebstack-hello nimsforestwebstack-setupenv nimsforestwebstack-init nimsforestwebstack-lint nimsforestwebstack-test-all nimsforestwebstack-dev nimsforestwebstack-addtomainmake
+.PHONY: nimsforestwebstack-hello nimsforestwebstack-setupenv nimsforestwebstack-init nimsforestwebstack-lint nimsforestwebstack-test-all nimsforestwebstack-dev nimsforestwebstack-addtomainmake nimsforestwebstack-help
 
 nimsforestwebstack-hello:
 	@echo "🌲 nimsforestwebstack - Project Analysis"
