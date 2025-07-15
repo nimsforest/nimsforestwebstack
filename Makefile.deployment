@@ -1,0 +1,525 @@
+# ============================================================================
+# Universal Deployment Makefile
+# ============================================================================
+# This Makefile contains universal deployment commands for Next.js/React projects
+# with GitHub Actions and Netlify deployment automation.
+#
+# 🚀 GETTING STARTED:
+# 
+# 1. COPY THIS FILE to your new project root:
+#    cp Makefile.deployment /path/to/your/project/
+#
+# 2. GENERATE A PROJECT MAKEFILE:
+#    cd /path/to/your/project/
+#    make init-project
+#    # This creates a main Makefile that includes Makefile.deployment
+#
+# 3. CUSTOMIZE YOUR PROJECT:
+#    # Edit the generated Makefile to customize:
+#    # - UI_DIR (default: ui/website)
+#    # - Build commands specific to your project
+#    # - Test commands
+#    # - Development commands
+#
+# 4. SET UP DEPLOYMENT:
+#    make setup-githubactions-netlifydeployment
+#    # This will guide you through GitHub CLI and Netlify setup
+#
+# 5. START DEVELOPING:
+#    make help           # See all available commands
+#    make dev            # Start development server
+#    make build          # Build your project
+#    make test           # Run tests
+#    make deploy-website # Deploy to production
+#
+# ============================================================================
+# ADVANCED USAGE:
+# ============================================================================
+# 
+# Include this file in your main Makefile:
+#    include Makefile.deployment
+#
+# Override variables as needed in your main Makefile:
+#    UI_DIR = ui/my-app
+#    NETLIFY_CONFIG = netlify.toml
+#    GITHUB_WORKFLOW = .github/workflows/deploy.yml
+#
+# Available deployment commands:
+#    make init-project                 - Generate project Makefile template
+#    make setup-githubcli              - Install and authenticate GitHub CLI
+#    make setup-githubcli-ssh          - Authenticate GitHub CLI with SSH
+#    make setup-netlify                - Setup Netlify CLI
+#    make setup-github-secrets         - Configure GitHub repository secrets
+#    make setup-githubactions-netlifydeployment - Full setup automation
+#    make validate-deployment-setup    - Validate complete deployment config
+#    make deploy-website               - Deploy to Netlify production
+#    make deploy-preview               - Create Netlify preview deployment
+#    make check-github-secrets         - Verify GitHub repository secrets
+#    make test-build                   - Test build locally before deployment
+#    make deploy-status                - Check deployment status
+#    make deployment-help              - Show deployment-specific help
+#
+# Requirements:
+# - Node.js project with package.json in $(UI_DIR)
+# - netlify.toml configuration file
+# - GitHub Actions workflow file (optional)
+# ============================================================================
+
+# Default configuration - override these in your main Makefile
+UI_DIR ?= ui/website
+NETLIFY_CONFIG ?= netlify.toml
+GITHUB_WORKFLOW ?= .github/workflows/deploy.yml
+
+# ============================================================================
+# Deployment Help
+# ============================================================================
+.PHONY: deployment-help
+deployment-help:
+	@echo "Universal Deployment Commands"
+	@echo "============================"
+	@echo ""
+	@echo "🚀 Getting Started (New Project):"
+	@echo "  1. Copy Makefile.deployment to your project root"
+	@echo "  2. make init-project         - Generate main Makefile template"
+	@echo "  3. Customize generated Makefile for your project structure"
+	@echo "  4. make setup-githubactions-netlifydeployment - Complete deployment setup"
+	@echo "  5. make help                 - See all available commands"
+	@echo ""
+	@echo "📋 Project Setup Commands:"
+	@echo "  make init-project            - Generate project Makefile template"
+	@echo "  make deployment-help         - Show this help (deployment-specific)"
+	@echo ""
+	@echo "🔧 Deployment Setup Commands:"
+	@echo "  make setup-githubactions-netlifydeployment - Complete GitHub Actions + Netlify setup"
+	@echo "  make validate-deployment-setup             - Validate your deployment configuration"
+	@echo ""
+	@echo "🔧 Individual Setup Commands:"
+	@echo "  make setup-githubcli         - Install and authenticate GitHub CLI"
+	@echo "  make setup-githubcli-ssh     - Authenticate GitHub CLI with existing SSH keys"
+	@echo "  make setup-netlify           - Setup Netlify CLI and authentication"
+	@echo "  make setup-github-secrets    - Set GitHub repository secrets for deployment"
+	@echo "  make check-github-secrets    - Verify GitHub repository secrets"
+	@echo ""
+	@echo "🚀 Deployment Commands:"
+	@echo "  make deploy-website          - Deploy website to Netlify production"
+	@echo "  make deploy-preview          - Create Netlify preview deployment"
+	@echo "  make test-build              - Test build locally before deployment"
+	@echo "  make deploy-status           - Check deployment status"
+	@echo ""
+	@echo "🔧 Configuration:"
+	@echo "  UI_DIR = $(UI_DIR)"
+	@echo "  NETLIFY_CONFIG = $(NETLIFY_CONFIG)"
+	@echo "  GITHUB_WORKFLOW = $(GITHUB_WORKFLOW)"
+	@echo ""
+	@echo "💡 Override variables in your main Makefile as needed."
+	@echo "💡 See the header of this file for detailed getting started instructions."
+	@echo ""
+
+# ============================================================================
+# GitHub CLI Setup
+# ============================================================================
+.PHONY: setup-githubcli setup-githubcli-ssh
+
+setup-githubcli:
+	@echo "📦 Installing and setting up GitHub CLI..."
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "🔧 Installing GitHub CLI..."; \
+		if command -v apt >/dev/null 2>&1; then \
+			echo "Using apt package manager..."; \
+			curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg; \
+			sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg; \
+			echo "deb [arch=$$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null; \
+			sudo apt update && sudo apt install -y gh; \
+		elif command -v brew >/dev/null 2>&1; then \
+			echo "Using brew package manager..."; \
+			brew install gh; \
+		else \
+			echo "Installing GitHub CLI binary directly..."; \
+			curl -L https://github.com/cli/cli/releases/download/v2.40.1/gh_2.40.1_linux_amd64.tar.gz | tar -xz; \
+			sudo mv gh_2.40.1_linux_amd64/bin/gh /usr/local/bin/; \
+			rm -rf gh_2.40.1_linux_amd64; \
+		fi; \
+		echo "✅ GitHub CLI installed successfully"; \
+	else \
+		echo "✅ GitHub CLI already installed"; \
+	fi
+	@echo ""
+	@echo "🔑 Checking GitHub CLI authentication..."
+	@if ! gh auth status >/dev/null 2>&1; then \
+		echo "Setting up GitHub CLI authentication with SSH..."; \
+		echo "💡 Using SSH authentication since you already have SSH keys configured"; \
+		gh auth login --git-protocol ssh --hostname github.com; \
+	else \
+		echo "✅ Already authenticated with GitHub CLI"; \
+	fi
+	@echo ""
+	@echo "✅ GitHub CLI setup complete!"
+	@echo "💡 You can now use 'gh' commands or run 'make setup-github-secrets'"
+
+setup-githubcli-ssh:
+	@echo "📦 Setting up GitHub CLI with SSH authentication..."
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "❌ GitHub CLI not installed"; \
+		echo "💡 Run 'make setup-githubcli' first"; \
+		exit 1; \
+	fi
+	@echo "🔑 Authenticating with SSH (will use your existing SSH keys)..."
+	@gh auth login --git-protocol ssh --hostname github.com --skip-ssh-key
+	@echo "✅ GitHub CLI authenticated with SSH!"
+	@echo "💡 Your existing SSH keys will be used for Git operations"
+
+# ============================================================================
+# Netlify Setup
+# ============================================================================
+.PHONY: setup-netlify
+
+setup-netlify:
+	@echo "🔧 Setting up Netlify CLI..."
+	@if ! command -v netlify >/dev/null 2>&1; then \
+		echo "Installing Netlify CLI..."; \
+		npm install -g netlify-cli; \
+	else \
+		echo "✅ Netlify CLI already installed"; \
+	fi
+	@echo "🔑 Please run 'netlify login' to authenticate"
+	@echo "🏠 Then run 'netlify link' in the project root to connect to your site"
+	@echo "💡 Or set NETLIFY_SITE_ID environment variable manually"
+
+# ============================================================================
+# GitHub Secrets Management
+# ============================================================================
+.PHONY: setup-github-secrets check-github-secrets
+
+setup-github-secrets:
+	@echo "🔐 Setting up GitHub secrets for automatic deployment..."
+	@echo "This will read Netlify configuration and set GitHub repository secrets"
+	@echo ""
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "❌ GitHub CLI not installed"; \
+		echo "💡 Install with: brew install gh (macOS) or https://cli.github.com/"; \
+		exit 1; \
+	fi
+	@if ! gh auth status >/dev/null 2>&1; then \
+		echo "🔑 Please authenticate with GitHub CLI first:"; \
+		echo "  gh auth login"; \
+		exit 1; \
+	fi
+	@if [ ! -f .netlify/state.json ]; then \
+		echo "❌ Netlify not linked to this directory"; \
+		echo "💡 Run 'netlify link' first"; \
+		exit 1; \
+	fi
+	@echo "📝 Extracting Netlify Site ID..."
+	@SITE_ID=$$(jq -r '.siteId' .netlify/state.json 2>/dev/null || echo ""); \
+	if [ -z "$$SITE_ID" ] || [ "$$SITE_ID" = "null" ]; then \
+		echo "❌ Could not extract site ID from .netlify/state.json"; \
+		echo "💡 Try running 'netlify status' to verify the link"; \
+		exit 1; \
+	fi; \
+	echo "✅ Found Site ID: $$SITE_ID"; \
+	echo "🔑 Setting NETLIFY_SITE_ID secret..."; \
+	echo "$$SITE_ID" | gh secret set NETLIFY_SITE_ID; \
+	echo "✅ NETLIFY_SITE_ID secret set successfully"
+	@echo ""
+	@echo "🔑 Setting NETLIFY_AUTH_TOKEN secret..."
+	@echo "💡 You need to create a personal access token at:"
+	@echo "   https://app.netlify.com/user/applications#personal-access-tokens"
+	@echo ""
+	@read -p "Enter your Netlify personal access token: " token; \
+	if [ -z "$$token" ]; then \
+		echo "❌ No token provided"; \
+		exit 1; \
+	fi; \
+	echo "$$token" | gh secret set NETLIFY_AUTH_TOKEN; \
+	echo "✅ NETLIFY_AUTH_TOKEN secret set successfully"
+	@echo ""
+	@echo "🎉 GitHub secrets configured! Your repository is now ready for automatic deployment."
+	@echo "💡 Push to main branch to trigger automatic deployment to production."
+
+check-github-secrets:
+	@echo "🔍 Checking GitHub repository secrets..."
+	@if ! command -v gh >/dev/null 2>&1; then \
+		echo "❌ GitHub CLI not installed"; \
+		exit 1; \
+	fi
+	@if ! gh auth status >/dev/null 2>&1; then \
+		echo "❌ Not authenticated with GitHub CLI"; \
+		echo "💡 Run 'gh auth login' first"; \
+		exit 1; \
+	fi
+	@echo "📋 Repository secrets:"
+	@gh secret list
+
+# ============================================================================
+# Deployment Validation
+# ============================================================================
+.PHONY: validate-deployment-setup
+
+validate-deployment-setup:
+	@echo "🔍 Validating GitHub Actions + Netlify deployment setup..."
+	@echo ""
+	@echo "📋 Checking prerequisites:"
+	@echo ""
+	@echo "1️⃣ GitHub CLI Installation:"
+	@if command -v gh >/dev/null 2>&1; then \
+		echo "✅ GitHub CLI is installed ($$(gh --version | head -1))"; \
+	else \
+		echo "❌ GitHub CLI not found"; \
+		echo "💡 Run: make setup-githubcli"; \
+		echo ""; \
+	fi
+	@echo ""
+	@echo "2️⃣ GitHub CLI Authentication:"
+	@if command -v gh >/dev/null 2>&1; then \
+		if gh auth status >/dev/null 2>&1; then \
+			echo "✅ GitHub CLI is authenticated"; \
+			echo "📋 Logged in as: $$(gh api user --jq .login 2>/dev/null || echo 'Unknown')"; \
+		else \
+			echo "❌ GitHub CLI not authenticated"; \
+			echo "💡 Run: gh auth login"; \
+		fi; \
+	else \
+		echo "⏭️  Skipping (GitHub CLI not installed)"; \
+	fi
+	@echo ""
+	@echo "3️⃣ Netlify Configuration:"
+	@if [ -f .netlify/state.json ]; then \
+		SITE_ID=$$(jq -r '.siteId' .netlify/state.json 2>/dev/null || echo ""); \
+		if [ -n "$$SITE_ID" ] && [ "$$SITE_ID" != "null" ]; then \
+			echo "✅ Netlify project is linked"; \
+			echo "📋 Site ID: $$SITE_ID"; \
+		else \
+			echo "❌ Invalid Netlify configuration"; \
+			echo "💡 Run: netlify link"; \
+		fi; \
+	else \
+		echo "❌ Netlify not linked to this directory"; \
+		echo "💡 Run: netlify login && netlify link"; \
+	fi
+	@echo ""
+	@echo "4️⃣ GitHub Repository Secrets:"
+	@if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then \
+		echo "Checking repository secrets..."; \
+		SECRETS=$$(gh secret list --json name --jq '.[].name' 2>/dev/null || echo ""); \
+		if echo "$$SECRETS" | grep -q "NETLIFY_AUTH_TOKEN"; then \
+			echo "✅ NETLIFY_AUTH_TOKEN is set"; \
+		else \
+			echo "❌ NETLIFY_AUTH_TOKEN missing"; \
+		fi; \
+		if echo "$$SECRETS" | grep -q "NETLIFY_SITE_ID"; then \
+			echo "✅ NETLIFY_SITE_ID is set"; \
+		else \
+			echo "❌ NETLIFY_SITE_ID missing"; \
+		fi; \
+		if [ -z "$$SECRETS" ]; then \
+			echo "❌ No repository secrets found"; \
+		fi; \
+		echo "💡 Run: make setup-github-secrets"; \
+	else \
+		echo "⏭️  Skipping (GitHub CLI not ready)"; \
+	fi
+	@echo ""
+	@echo "5️⃣ GitHub Actions Workflow:"
+	@if [ -f "$(GITHUB_WORKFLOW)" ]; then \
+		echo "✅ GitHub Actions workflow exists"; \
+	else \
+		echo "❌ GitHub Actions workflow missing"; \
+		echo "💡 Workflow should be at $(GITHUB_WORKFLOW)"; \
+	fi
+	@echo ""
+	@echo "6️⃣ Netlify Configuration:"
+	@if [ -f "$(NETLIFY_CONFIG)" ]; then \
+		echo "✅ $(NETLIFY_CONFIG) configuration exists"; \
+	else \
+		echo "❌ $(NETLIFY_CONFIG) missing"; \
+	fi
+	@echo ""
+	@echo "📊 Setup Summary:"
+	@ALL_GOOD=true; \
+	if ! command -v gh >/dev/null 2>&1; then ALL_GOOD=false; fi; \
+	if command -v gh >/dev/null 2>&1 && ! gh auth status >/dev/null 2>&1; then ALL_GOOD=false; fi; \
+	if [ ! -f .netlify/state.json ]; then ALL_GOOD=false; fi; \
+	if [ ! -f "$(GITHUB_WORKFLOW)" ]; then ALL_GOOD=false; fi; \
+	if [ ! -f "$(NETLIFY_CONFIG)" ]; then ALL_GOOD=false; fi; \
+	if [ "$$ALL_GOOD" = "true" ]; then \
+		echo "🎉 All components are configured!"; \
+		echo "💡 Push to main branch to test automatic deployment"; \
+	else \
+		echo "⚠️  Some components need attention"; \
+		echo "💡 Follow the suggestions above to complete setup"; \
+	fi
+
+# ============================================================================
+# Deployment Commands
+# ============================================================================
+.PHONY: deploy-website deploy-preview deploy-status test-build
+
+deploy-website:
+	@echo "🚀 Deploying website to Netlify production..."
+	@echo "Using $(NETLIFY_CONFIG) configuration for build and deploy"
+	@if [ ! -f .netlify/state.json ] && [ -z "$${NETLIFY_SITE_ID}" ]; then \
+		echo "❌ Project not linked and NETLIFY_SITE_ID not set"; \
+		echo "💡 Run 'netlify link' or set NETLIFY_SITE_ID environment variable"; \
+		exit 1; \
+	fi
+	@if [ -n "$${NETLIFY_AUTH_TOKEN}" ]; then \
+		echo "🔑 Using NETLIFY_AUTH_TOKEN for authentication"; \
+	fi
+	netlify deploy --prod
+
+deploy-preview:
+	@echo "👀 Creating preview deployment..."
+	@echo "Using $(NETLIFY_CONFIG) configuration for build and deploy"
+	@if [ ! -f .netlify/state.json ] && [ -z "$${NETLIFY_SITE_ID}" ]; then \
+		echo "❌ Project not linked and NETLIFY_SITE_ID not set"; \
+		echo "💡 Run 'netlify link' or set NETLIFY_SITE_ID environment variable"; \
+		exit 1; \
+	fi
+	@if [ -n "$${NETLIFY_AUTH_TOKEN}" ]; then \
+		echo "🔑 Using NETLIFY_AUTH_TOKEN for authentication"; \
+	fi
+	netlify deploy
+
+deploy-status:
+	@echo "📊 Checking deployment status..."
+	netlify status
+
+test-build:
+	@echo "🧪 Testing build locally before deployment..."
+	cd $(UI_DIR) && npm ci
+	cd $(UI_DIR) && npm run build
+	@echo "✅ Build successful! Ready for deployment."
+
+# ============================================================================
+# Automated Setup
+# ============================================================================
+.PHONY: setup-githubactions-netlifydeployment
+
+setup-githubactions-netlifydeployment: setup-githubcli
+	@echo "🚀 Setting up GitHub Actions with Netlify deployment automation..."
+	@echo ""
+	@echo "🔧 Setting up GitHub repository secrets..."
+	@$(MAKE) setup-github-secrets
+	@echo ""
+	@echo "🎉 GitHub Actions Netlify deployment is now configured!"
+	@echo "💡 Push to main branch to trigger automatic deployment to production"
+	@echo "💡 Create PR to trigger preview deployments"
+
+# ============================================================================
+# Project Template Generation
+# ============================================================================
+.PHONY: init-project
+
+define MAKEFILE_TEMPLATE
+# ============================================================================
+# Project Makefile
+# ============================================================================
+# This is a template Makefile generated by Makefile.deployment
+# 
+# 🔧 CUSTOMIZE THIS FILE:
+# - Update PROJECT_NAME with your project name
+# - Update UI_DIR to match your project structure
+# - Add project-specific build, test, and development commands
+#
+# 🚀 QUICK START:
+# make help           - Show all available commands
+# make dev            - Start development server
+# make build          - Build your project
+# make test           - Run tests
+# make deploy-website - Deploy to production
+# ============================================================================
+
+# Project configuration - CUSTOMIZE THESE
+PROJECT_NAME ?= my-nextjs-project
+UI_DIR ?= ui/website
+NETLIFY_CONFIG ?= netlify.toml
+GITHUB_WORKFLOW ?= .github/workflows/deploy.yml
+
+# Include universal deployment commands
+include Makefile.deployment
+
+# Default target
+.PHONY: all
+all: help
+
+# ============================================================================
+# Help
+# ============================================================================
+.PHONY: help
+help:
+	@echo "$$(PROJECT_NAME) - Available Make Targets"
+	@echo "======================================="
+	@echo ""
+	@echo "🚀 Quick Start:"
+	@echo "  make dev                - Start development server"
+	@echo "  make build              - Build the project"
+	@echo "  make test               - Run tests"
+	@echo "  make deploy-website     - Deploy to production"
+	@echo ""
+	@echo "💡 Run 'make deployment-help' for deployment-specific commands"
+	@echo ""
+
+# ============================================================================
+# Development Commands
+# ============================================================================
+.PHONY: dev build test clean deps
+
+dev:
+	@echo "🚀 Starting development server..."
+	cd $$(UI_DIR) && npm run dev
+
+build:
+	@echo "🔨 Building $$(PROJECT_NAME)..."
+	cd $$(UI_DIR) && npm run build
+
+test:
+	@echo "🧪 Running tests..."
+	cd $$(UI_DIR) && npm test
+
+clean:
+	@echo "🧹 Cleaning build artifacts..."
+	cd $$(UI_DIR) && rm -rf .next build dist node_modules/.cache
+
+deps:
+	@echo "📦 Installing dependencies..."
+	cd $$(UI_DIR) && npm install
+endef
+
+export MAKEFILE_TEMPLATE
+
+init-project:
+	@echo "🚀 Initializing new project with Makefile.deployment integration..."
+	@echo ""
+	@if [ -f Makefile ]; then \
+		echo "⚠️  Makefile already exists!"; \
+		echo "💡 Backup existing Makefile before continuing (y/n)?"; \
+		read -r confirm; \
+		if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+			mv Makefile Makefile.backup; \
+			echo "✅ Backed up existing Makefile to Makefile.backup"; \
+		else \
+			echo "❌ Aborting to avoid overwriting existing Makefile"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "📝 Creating main Makefile template..."
+	@echo "$$MAKEFILE_TEMPLATE" > Makefile
+	@echo "✅ Main Makefile created successfully!"
+	@echo ""
+	@echo "📝 Next steps:"
+	@echo "1. Edit the new Makefile to customize PROJECT_NAME and UI_DIR"
+	@echo "2. Run 'make help' to see all available commands"
+	@echo "3. Run 'make deps' to install dependencies"
+	@echo "4. Run 'make dev' to start development"
+	@echo "5. Run 'make setup-githubactions-netlifydeployment' to setup deployment"
+	@echo ""
+	@echo "💡 The Makefile has been created with sensible defaults"
+	@echo "💡 See the header of Makefile.deployment for more information"
+
+# ============================================================================
+# Phony Targets
+# ============================================================================
+.PHONY: setup-githubcli setup-githubcli-ssh setup-netlify setup-github-secrets 
+.PHONY: check-github-secrets validate-deployment-setup deploy-website deploy-preview
+.PHONY: deploy-status test-build setup-githubactions-netlifydeployment deployment-help
+.PHONY: init-project
