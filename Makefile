@@ -53,6 +53,8 @@ nimsforestwebstack-help:
 	@echo "  nimsforestwebstack-lint       - Validate project conformance"
 	@echo "  nimsforestwebstack-test-all   - Test all components"
 	@echo "  nimsforestwebstack-dev        - Start development environment"
+	@echo "  nimsforestwebstack-clean      - Clean all build artifacts"
+	@echo "  nimsforestwebstack-kill-servers - Stop all development servers"
 	@echo "  nimsforestwebstack-help       - Show this help message"
 	@echo ""
 	@echo "🚀 Deployment Commands (when configured):"
@@ -70,7 +72,7 @@ nimsforestwebstack-help:
 # ============================================================================
 # Main Commands (prefixed for integration)
 # ============================================================================
-.PHONY: nimsforestwebstack-hello nimsforestwebstack-setupenv nimsforestwebstack-init nimsforestwebstack-lint nimsforestwebstack-test-all nimsforestwebstack-dev nimsforestwebstack-addtomainmake nimsforestwebstack-help
+.PHONY: nimsforestwebstack-hello nimsforestwebstack-setupenv nimsforestwebstack-init nimsforestwebstack-lint nimsforestwebstack-test-all nimsforestwebstack-dev nimsforestwebstack-addtomainmake nimsforestwebstack-help nimsforestwebstack-clean nimsforestwebstack-kill-servers
 
 nimsforestwebstack-hello:
 	@echo "🌲 nimsforestwebstack - Project Analysis"
@@ -777,6 +779,59 @@ nimsforestwebstack-dev:
 	@echo "🚀 Starting all services..."
 	@echo "Press Ctrl+C to stop all services"
 	@cd webstack && $(MAKE) -f Makefile.nimsforestwebstack dev
+
+nimsforestwebstack-clean:
+	@echo "🧹 Cleaning all nimsforestwebstack build artifacts..."
+	@echo ""
+	@if [ ! -d "$(WEBSTACK_DIR)" ]; then \
+		echo "❌ webstack/ directory not found"; \
+		echo "💡 Run 'make nimsforestwebstack-init' first"; \
+		exit 1; \
+	fi
+	@echo "🗑️ Cleaning Hugo build artifacts..."
+	@if [ -d "$(HUGO_DIR)" ]; then \
+		cd $(HUGO_DIR) && rm -rf public resources/_gen .hugo_build.lock; \
+		echo "  ✅ Hugo artifacts cleaned"; \
+	fi
+	@echo "🗑️ Cleaning Next.js build artifacts..."
+	@if [ -d "$(NEXTJS_STATIC_DIR)" ]; then \
+		cd $(NEXTJS_STATIC_DIR) && rm -rf .next build dist out node_modules/.cache; \
+		echo "  ✅ Next.js tools artifacts cleaned"; \
+	fi
+	@if [ -d "$(NEXTJS_SSR_DIR)" ]; then \
+		cd $(NEXTJS_SSR_DIR) && rm -rf .next build dist out node_modules/.cache; \
+		echo "  ✅ Next.js app artifacts cleaned"; \
+	fi
+	@echo "🗑️ Cleaning API build artifacts..."
+	@if [ -d "$(API_DIR)" ]; then \
+		cd $(API_DIR) && rm -f api-gateway *.exe; \
+		echo "  ✅ API artifacts cleaned"; \
+	fi
+	@echo "🗑️ Cleaning Docker artifacts..."
+	@cd $(WEBSTACK_DIR) && docker compose -f docker-compose.dev.yml down --volumes --remove-orphans 2>/dev/null || true
+	@echo "  ✅ Docker containers and volumes cleaned"
+	@echo ""
+	@echo "✅ All build artifacts cleaned successfully!"
+
+nimsforestwebstack-kill-servers:
+	@echo "🛑 Stopping all nimsforestwebstack development servers..."
+	@echo ""
+	@echo "🔌 Stopping process-based servers..."
+	@-pkill -f "next dev" 2>/dev/null && echo "  ✅ Next.js dev servers stopped" || echo "  ℹ️  No Next.js dev servers running"
+	@-pkill -f "hugo server" 2>/dev/null && echo "  ✅ Hugo server stopped" || echo "  ℹ️  No Hugo server running"
+	@-pkill -f "go run" 2>/dev/null && echo "  ✅ Go API server stopped" || echo "  ℹ️  No Go API server running"
+	@echo "🔌 Freeing up ports..."
+	@-fuser -k 1313/tcp 2>/dev/null && echo "  ✅ Port 1313 (Hugo) freed" || echo "  ℹ️  Port 1313 already free"
+	@-fuser -k 3000/tcp 2>/dev/null && echo "  ✅ Port 3000 (Next.js App) freed" || echo "  ℹ️  Port 3000 already free"
+	@-fuser -k 3001/tcp 2>/dev/null && echo "  ✅ Port 3001 (Next.js Tools) freed" || echo "  ℹ️  Port 3001 already free"
+	@-fuser -k 8080/tcp 2>/dev/null && echo "  ✅ Port 8080 (API) freed" || echo "  ℹ️  Port 8080 already free"
+	@-fuser -k 8081/tcp 2>/dev/null && echo "  ✅ Port 8081 (Auth) freed" || echo "  ℹ️  Port 8081 already free"
+	@echo "🐳 Stopping Docker services..."
+	@if [ -f "$(WEBSTACK_DIR)/docker-compose.dev.yml" ]; then \
+		cd $(WEBSTACK_DIR) && docker compose -f docker-compose.dev.yml down 2>/dev/null && echo "  ✅ Docker services stopped" || echo "  ℹ️  No Docker services running"; \
+	fi
+	@echo ""
+	@echo "✅ All development servers and services stopped!"
 
 nimsforestwebstack-addtomainmake:
 	@echo "🔗 Adding nimsforestwebstack to main Makefile..."

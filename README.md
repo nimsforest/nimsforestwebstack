@@ -99,6 +99,8 @@ make nimsforestwebstack-init         # Initialize webstack structure
 make nimsforestwebstack-lint         # Validate project conformance
 make nimsforestwebstack-test-all     # Test all components
 make nimsforestwebstack-dev          # Start development environment
+make nimsforestwebstack-clean        # Clean all build artifacts
+make nimsforestwebstack-kill-servers # Stop all development servers
 ```
 
 ### Build and Deploy Commands
@@ -223,6 +225,15 @@ make deploy-all                      # Deploy complete stack
 ```bash
 cd webstack
 docker-compose -f docker-compose.dev.yml up --build
+```
+
+### 🛠️ Development Utilities
+```bash
+# Clean all build artifacts
+make nimsforestwebstack-clean        # Removes .next, build, dist, Docker volumes
+
+# Stop all running servers 
+make nimsforestwebstack-kill-servers # Kills processes and frees ports 1313, 3000, 3001, 8080, 8081
 ```
 
 ### 📖 Complete Deployment Guide
