@@ -70,8 +70,7 @@ your-project/
     ├── auth/                         # Authentication (Zitadel)
     ├── infrastructure/               # Nginx, Docker configs
     ├── docker-compose.dev.yml        # Development environment
-    ├── .gitignore                    # Build artifacts exclusion
-    └── Makefile.nimsforestwebstack   # Web stack commands
+    └── .gitignore                    # Build artifacts exclusion
 ```
 
 ## 📦 Components
@@ -102,12 +101,11 @@ make nimsforestwebstack-test-all     # Test all components
 make nimsforestwebstack-dev          # Start development environment
 ```
 
-### From webstack directory
+### Build and Deploy Commands
 ```bash
-cd webstack && make help             # Show all webstack commands
-cd webstack && make dev              # Start all services
-cd webstack && make build-all        # Build for production
-cd webstack && make test-all         # Run all tests
+make build-all                       # Build for production
+make test-all                        # Run all tests  
+make deploy-all                      # Deploy complete stack
 ```
 
 ## ⚙️ Configuration
@@ -201,10 +199,24 @@ make nimsforestwebstack-lint         # Validate project structure
 
 ## 🚀 Deployment
 
+nimsforestwebstack includes comprehensive deployment automation with GitHub Actions and Netlify integration.
+
+### Quick Deployment Setup
+```bash
+# Set up automated deployment
+make setup-githubactions-netlifydeployment
+
+# Deploy to production
+make deploy-website
+
+# Create preview deployment
+make deploy-preview
+```
+
 ### Build for Production
 ```bash
-cd webstack && make build-all        # Build all components
-cd webstack && make deploy-all       # Deploy complete stack
+make build-all                       # Build all components
+make deploy-all                      # Deploy complete stack
 ```
 
 ### Docker Deployment
@@ -212,6 +224,17 @@ cd webstack && make deploy-all       # Deploy complete stack
 cd webstack
 docker-compose -f docker-compose.dev.yml up --build
 ```
+
+### 📖 Complete Deployment Guide
+For detailed deployment setup, configuration, and troubleshooting, see:
+**[Deployment Tooling Documentation](docs/deploymenttools.md)**
+
+Features:
+- ✅ GitHub Actions CI/CD
+- ✅ Netlify production + preview deployments  
+- ✅ Automated secrets management
+- ✅ Multi-project support
+- ✅ Comprehensive validation
 
 ## 📋 Requirements
 
